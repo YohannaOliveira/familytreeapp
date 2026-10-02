@@ -1,6 +1,14 @@
 spring:
   application:
     name: familytree
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/familytree}
+    username: ${DB_USER:familytree}
+    password: ${DB_PASSWORD:familytree}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:5}
+  flyway:
+    enabled: true
 server:
   port: ${PORT:8080}
 management:

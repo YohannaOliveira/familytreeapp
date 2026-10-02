@@ -1,10 +1,8 @@
 package br.familytree;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class FamilyTreeApplicationTests {
+class FamilyTreeApplicationTests extends AbstractIntegrationTest {
     @Test
     void contextLoads() {
     }

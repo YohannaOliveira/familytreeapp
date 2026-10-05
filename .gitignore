@@ -8,3 +8,6 @@ target/
 .vscode/
 *.log
 *.tsbuildinfo
+
+# Planos de milestone (locais)
+milestones/

@@ -31,12 +31,21 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ConflictException.class)
     ResponseEntity<Object> conflict(ConflictException ex) {
-        return build(HttpStatus.CONFLICT, "CONFLICT", ex.getMessage(), null);
+        return build(HttpStatus.CONFLICT, ex.code(), ex.getMessage(), null);
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    ResponseEntity<Object> badRequest(BadRequestException ex) {
+        return build(HttpStatus.BAD_REQUEST, ex.code(), ex.getMessage(), null);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     ResponseEntity<Object> integrity(DataIntegrityViolationException ex) {
         log.warn("Violacao de integridade", ex);
+        String detail = String.valueOf(ex.getMostSpecificCause().getMessage());
+        if (detail.contains("uq_relationship")) {
+            return build(HttpStatus.CONFLICT, "DUPLICATE_RELATIONSHIP", "Relacionamento ja existe", null);
+        }
         return build(HttpStatus.CONFLICT, "CONFLICT", "Operacao viola uma restricao de integridade", null);
     }
 

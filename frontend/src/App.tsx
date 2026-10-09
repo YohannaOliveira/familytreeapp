@@ -1,7 +1,20 @@
+import { Navigate, Route, Routes } from 'react-router-dom'
+import { AppLayout } from './components/AppLayout'
+import { ToastViewport } from './components/ui/toast'
+import { LoginPage } from './pages/LoginPage'
+import { PeoplePage } from './pages/PeoplePage'
+
 export default function App() {
   return (
-    <main className="min-h-screen grid place-items-center bg-slate-50 text-slate-800">
-      <h1 className="text-2xl font-semibold">Árvore Genealógica</h1>
-    </main>
+    <>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route element={<AppLayout />}>
+          <Route index element={<PeoplePage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <ToastViewport />
+    </>
   )
 }

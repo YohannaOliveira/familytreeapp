@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -64,6 +66,16 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     ResponseEntity<Object> typeMismatch(MethodArgumentTypeMismatchException ex) {
         return build(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "Parametro invalido: " + ex.getName(),
                 List.of(new ErrorResponse.FieldError(ex.getName(), "valor invalido")));
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    ResponseEntity<Object> unauthenticated(AuthenticationException ex) {
+        return build(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", "Usuario ou senha invalidos", null);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    ResponseEntity<Object> forbidden(AccessDeniedException ex) {
+        return build(HttpStatus.FORBIDDEN, "FORBIDDEN", "Acesso negado", null);
     }
 
     @ExceptionHandler(Exception.class)

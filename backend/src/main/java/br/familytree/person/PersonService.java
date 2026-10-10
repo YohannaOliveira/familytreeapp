@@ -3,6 +3,7 @@ package br.familytree.person;
 import br.familytree.common.NotFoundException;
 import br.familytree.common.PageResponse;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,8 +50,13 @@ public class PersonService {
     }
 
     @Transactional(readOnly = true)
-    public List<PersonResponse> search(String q, int limit) {
-        return repository.search(NameNormalizer.normalize(q), limit, 0);
+    public List<PersonSearchResult> search(String q, int limit) {
+        List<PersonResponse> found = repository.search(NameNormalizer.normalize(q), limit, 0);
+        Map<UUID, List<String>> parents = repository.parentNames(found.stream().map(PersonResponse::id).toList());
+        return found.stream()
+                .map(p -> new PersonSearchResult(p.id(), p.fullName(), p.gender(), p.photoKey(),
+                        parents.getOrDefault(p.id(), List.of())))
+                .toList();
     }
 
     private static NotFoundException notFound(UUID id) {

@@ -28,6 +28,8 @@ interface RequestOptions {
   body?: unknown
   /** false para rotas publicas (login): nao envia token nem derruba a sessao em 401. */
   auth?: boolean
+  /** Cancela a requisicao (ex.: busca digitada ja substituida por outra). */
+  signal?: AbortSignal
 }
 
 function friendlyMessage(status: number, code: string, fallback: string): string {
@@ -38,7 +40,7 @@ function friendlyMessage(status: number, code: string, fallback: string): string
 }
 
 export async function api<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, auth = true } = options
+  const { method = 'GET', body, auth = true, signal } = options
   const headers: Record<string, string> = {}
   if (body !== undefined) headers['Content-Type'] = 'application/json'
   const token = useAuth.getState().token
@@ -50,6 +52,7 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
       method,
       headers,
       body: body === undefined ? undefined : JSON.stringify(body),
+      signal,
     })
   } catch {
     throw new ApiError(0, 'NETWORK', FRIENDLY.NETWORK)

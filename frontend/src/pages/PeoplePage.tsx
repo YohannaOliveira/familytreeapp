@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { ApiError } from '../api/client'
 import type { Person, PersonInput } from '../api/types'
 import { Button } from '../components/ui/Button'
@@ -8,6 +9,7 @@ import { PAGE_SIZE, useDeletePerson, usePeople, useSavePerson } from '../feature
 import { DeletePersonDialog } from '../features/people/DeletePersonDialog'
 import { PersonForm } from '../features/people/PersonForm'
 import { GENDER_LABELS } from '../features/people/schema'
+import { FamilyPanel } from '../features/relationships/FamilyPanel'
 
 type Panel = { mode: 'create' } | { mode: 'edit'; person: Person } | null
 
@@ -15,6 +17,7 @@ export function PeoplePage() {
   const [page, setPage] = useState(0)
   const [panel, setPanel] = useState<Panel>(null)
   const [toDelete, setToDelete] = useState<Person | null>(null)
+  const [familyOf, setFamilyOf] = useState<Person | null>(null)
 
   const people = usePeople(page)
   const save = useSavePerson()
@@ -87,7 +90,23 @@ export function PeoplePage() {
                     {person.gender ? GENDER_LABELS[person.gender] : 'Sexo não informado'}
                   </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    to={`/tree/${person.id}`}
+                    aria-label={`Ver árvore de ${person.fullName}`}
+                    className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2
+                      text-base font-medium text-slate-800 hover:bg-slate-100 focus-visible:outline-2
+                      focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+                  >
+                    Árvore
+                  </Link>
+                  <Button
+                    variant="secondary"
+                    aria-label={`Família de ${person.fullName}`}
+                    onClick={() => setFamilyOf(person)}
+                  >
+                    Família
+                  </Button>
                   <Button
                     variant="secondary"
                     aria-label={`Editar ${person.fullName}`}
@@ -130,6 +149,14 @@ export function PeoplePage() {
             onCancel={() => setPanel(null)}
           />
         )}
+      </BottomSheet>
+
+      <BottomSheet
+        open={familyOf !== null}
+        title={familyOf ? `Família de ${familyOf.fullName}` : ''}
+        onClose={() => setFamilyOf(null)}
+      >
+        {familyOf && <FamilyPanel key={familyOf.id} person={familyOf} />}
       </BottomSheet>
 
       <DeletePersonDialog

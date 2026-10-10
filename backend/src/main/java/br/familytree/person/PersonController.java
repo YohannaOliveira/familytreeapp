@@ -47,7 +47,7 @@ public class PersonController {
     }
 
     @GetMapping("/search")
-    public List<PersonResponse> search(
+    public List<PersonSearchResult> search(
             @RequestParam @NotBlank(message = "q e obrigatorio") String q,
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "deve ser >= 1")
                     @Max(value = 50, message = "deve ser <= 50") int limit) {

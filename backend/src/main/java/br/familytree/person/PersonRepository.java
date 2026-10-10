@@ -3,7 +3,11 @@ package br.familytree.person;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.jdbc.core.RowMapper;
@@ -96,6 +100,23 @@ public class PersonRepository {
                 .param("like", "%" + escapeLike(normalizedQuery) + "%")
                 .param("limit", limit).param("offset", offset)
                 .query(MAPPER).list();
+    }
+
+    /** Nomes dos pais (qualquer tipo de vinculo) de cada pessoa, em uma unica consulta. */
+    public Map<UUID, List<String>> parentNames(Collection<UUID> childIds) {
+        Map<UUID, List<String>> out = new HashMap<>();
+        if (childIds.isEmpty()) {
+            return out;
+        }
+        jdbc.sql("SELECT r.to_person_id AS child, p.full_name AS name FROM relationship r"
+                        + " JOIN person p ON p.id = r.from_person_id"
+                        + " WHERE r.type = 'PARENT_OF' AND r.to_person_id IN (:ids)"
+                        + " ORDER BY r.kind = 'BIOLOGICAL' DESC, p.search_name, p.id")
+                .param("ids", childIds)
+                .query((rs, row) -> Map.entry(rs.getObject("child", UUID.class), rs.getString("name")))
+                .list()
+                .forEach(e -> out.computeIfAbsent(e.getKey(), k -> new ArrayList<>()).add(e.getValue()));
+        return out;
     }
 
     public long countSearch(String normalizedQuery) {

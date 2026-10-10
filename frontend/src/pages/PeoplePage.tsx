@@ -9,6 +9,7 @@ import { PAGE_SIZE, useDeletePerson, usePeople, useSavePerson } from '../feature
 import { DeletePersonDialog } from '../features/people/DeletePersonDialog'
 import { PersonForm } from '../features/people/PersonForm'
 import { GENDER_LABELS } from '../features/people/schema'
+import { Avatar } from '../features/photos/Avatar'
 import { FamilyPanel } from '../features/relationships/FamilyPanel'
 
 type Panel = { mode: 'create' } | { mode: 'edit'; person: Person } | null
@@ -84,11 +85,14 @@ export function PeoplePage() {
           <ul className="divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
             {data.items.map((person) => (
               <li key={person.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-                <div className="min-w-0">
-                  <p className="truncate font-medium text-slate-900">{person.fullName}</p>
-                  <p className="text-sm text-slate-600">
-                    {person.gender ? GENDER_LABELS[person.gender] : 'Sexo não informado'}
-                  </p>
+                <div className="flex min-w-0 items-center gap-3">
+                  <Avatar name={person.fullName} photoKey={person.photoKey} />
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-slate-900">{person.fullName}</p>
+                    <p className="text-sm text-slate-600">
+                      {person.gender ? GENDER_LABELS[person.gender] : 'Sexo não informado'}
+                    </p>
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Link

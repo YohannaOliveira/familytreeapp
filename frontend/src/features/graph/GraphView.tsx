@@ -124,6 +124,7 @@ function GraphCanvas({ selectedId, onSelect, onExpand, onVisibleCount }: Props) 
       const data: PersonNodeData = {
         name: person.fullName,
         gender: person.gender,
+        photoKey: person.photoKey,
         generation: model.gens.get(id) ?? 0,
         isFocus: id === focusId,
         selected: id === selectedId,

@@ -4,6 +4,7 @@ import { ApiError } from '../../api/client'
 import type { Person, PersonInput } from '../../api/types'
 import { Button } from '../../components/ui/Button'
 import { SelectField, TextAreaField, TextField } from '../../components/ui/Field'
+import { PhotoUploader } from '../photos/PhotoUploader'
 import { GENDER_LABELS, personSchema, toInput, type PersonFormValues } from './schema'
 
 interface Props {
@@ -45,6 +46,11 @@ export function PersonForm({ person, onSubmit, onCancel }: Props) {
 
   return (
     <form onSubmit={submit} noValidate className="space-y-4">
+      {person ? (
+        <PhotoUploader person={person} />
+      ) : (
+        <p className="text-sm text-slate-600">Depois de adicionar a pessoa, você poderá colocar uma foto.</p>
+      )}
       <TextField
         label="Nome completo"
         autoComplete="off"

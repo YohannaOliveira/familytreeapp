@@ -41,6 +41,11 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, ex.code(), ex.getMessage(), null);
     }
 
+    @ExceptionHandler(ServiceUnavailableException.class)
+    ResponseEntity<Object> unavailable(ServiceUnavailableException ex) {
+        return build(HttpStatus.SERVICE_UNAVAILABLE, ex.code(), ex.getMessage(), null);
+    }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     ResponseEntity<Object> integrity(DataIntegrityViolationException ex) {
         log.warn("Violacao de integridade", ex);

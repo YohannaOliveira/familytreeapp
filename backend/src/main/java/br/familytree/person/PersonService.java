@@ -2,6 +2,7 @@ package br.familytree.person;
 
 import br.familytree.common.NotFoundException;
 import br.familytree.common.PageResponse;
+import br.familytree.photo.PhotoService;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -13,9 +14,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class PersonService {
 
     private final PersonRepository repository;
+    private final PhotoService photos;
 
-    public PersonService(PersonRepository repository) {
+    public PersonService(PersonRepository repository, PhotoService photos) {
         this.repository = repository;
+        this.photos = photos;
     }
 
     public PersonResponse create(PersonRequest req) {
@@ -33,9 +36,11 @@ public class PersonService {
     }
 
     public void delete(UUID id) {
+        String photoKey = repository.findById(id).map(PersonResponse::photoKey).orElse(null);
         if (!repository.delete(id)) {
             throw notFound(id);
         }
+        photos.deleteQuietly(photoKey, null);
     }
 
     @Transactional(readOnly = true)

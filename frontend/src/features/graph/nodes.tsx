@@ -1,6 +1,7 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { createContext, memo, useContext } from 'react'
 import type { Gender } from '../../api/types'
+import { Avatar } from '../photos/Avatar'
 import type { Dir } from './derive'
 
 export type Chip = { kind: 'expand'; count: number } | { kind: 'collapse' } | { kind: 'show' } | null
@@ -8,6 +9,7 @@ export type Chip = { kind: 'expand'; count: number } | { kind: 'collapse' } | { 
 export interface PersonNodeData extends Record<string, unknown> {
   name: string
   gender: Gender | null
+  photoKey: string | null
   generation: number
   isFocus: boolean
   selected: boolean
@@ -77,17 +79,20 @@ export const PersonNode = memo(function PersonNode({ id, data }: NodeProps) {
   return (
     <div
       aria-label={`${d.name}${d.isFocus ? ' (foco)' : ''}`}
-      className={`relative flex h-[72px] w-[176px] flex-col justify-center rounded-xl border-2 px-3 shadow-sm
+      className={`relative flex h-[72px] w-[176px] items-center gap-2 rounded-xl border-2 px-2 shadow-sm
         ${tone(d.generation)} ${d.selected ? 'ring-4 ring-emerald-400' : ''} ${d.dimmed ? 'opacity-30' : ''}`}
     >
       <Handle type="target" position={Position.Top} id="t" className="!opacity-0" />
       <Handle type="source" position={Position.Bottom} id="b" className="!opacity-0" />
       <Handle type="target" position={Position.Left} id="l" className="!opacity-0" />
       <Handle type="source" position={Position.Right} id="r" className="!opacity-0" />
-      <p className="line-clamp-2 text-sm font-semibold leading-tight text-slate-900">{d.name}</p>
-      <p className="text-xs text-slate-600">
-        {d.gender ? GENDER_MARK[d.gender] : ''} {d.isFocus ? 'Foco' : ''}
-      </p>
+      <Avatar name={d.name} photoKey={d.photoKey} className="size-10" />
+      <div className="min-w-0 flex-1">
+        <p className="line-clamp-2 text-sm font-semibold leading-tight text-slate-900">{d.name}</p>
+        <p className="text-xs text-slate-600">
+          {d.gender ? GENDER_MARK[d.gender] : ''} {d.isFocus ? 'Foco' : ''}
+        </p>
+      </div>
       <ChipButton
         chip={d.up}
         label="pais"

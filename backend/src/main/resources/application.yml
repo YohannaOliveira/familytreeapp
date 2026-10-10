@@ -25,6 +25,15 @@ app:
     login-window: ${LOGIN_WINDOW:1m}
     api-max-requests: ${API_MAX_REQUESTS:300}
     api-window: ${API_WINDOW:1m}
+  photos:
+    # Opcionais: sem eles o resto da aplicacao funciona e o upload de fotos responde 503.
+    endpoint: ${R2_ENDPOINT:}
+    bucket: ${R2_BUCKET:}
+    access-key-id: ${R2_ACCESS_KEY_ID:}
+    secret-access-key: ${R2_SECRET_ACCESS_KEY:}
+    public-base-url: ${R2_PUBLIC_BASE_URL:}
+    upload-url-ttl: ${PHOTO_UPLOAD_URL_TTL:5m}
+    max-bytes: ${PHOTO_MAX_BYTES:204800}
 management:
   endpoints:
     web:

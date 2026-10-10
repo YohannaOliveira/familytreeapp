@@ -75,6 +75,11 @@ public class PersonRepository {
                 .param("id", id).query(MAPPER).optional();
     }
 
+    public boolean setPhotoKey(UUID id, String photoKey) {
+        return jdbc.sql("UPDATE person SET photo_key = :key, updated_at = now() WHERE id = :id")
+                .param("id", id).param("key", photoKey).update() > 0;
+    }
+
     public boolean delete(UUID id) {
         return jdbc.sql("DELETE FROM person WHERE id = :id").param("id", id).update() > 0;
     }

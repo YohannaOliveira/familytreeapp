@@ -122,6 +122,25 @@ class PersonApiTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void searchShowsParentNamesToTellNamesakesApart() throws Exception {
+        String pai = create("Carlos Souza");
+        String mae = create("Lucia Souza");
+        String filho = create("Joao Souza");
+        create("Joao Souza");
+        for (String parent : new String[] {pai, mae}) {
+            jdbc.update("INSERT INTO relationship (tree_id, type, from_person_id, to_person_id, subtype, kind)"
+                    + " SELECT t.id, 'PARENT_OF', ?::uuid, ?::uuid, 'PARENT', 'BIOLOGICAL' FROM tree t", parent, filho);
+        }
+        String body = mvc.perform(get("/api/v1/people/search?q=joao")).andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andReturn().getResponse().getContentAsString();
+        java.util.List<java.util.List<String>> parents = JsonPath.read(body, "$[?(@.id == '" + filho + "')].parents");
+        assertThat(parents.get(0)).containsExactlyInAnyOrder("Carlos Souza", "Lucia Souza");
+        java.util.List<java.util.List<String>> orphans = JsonPath.read(body, "$[?(@.id != '" + filho + "')].parents");
+        assertThat(orphans.get(0)).isEmpty();
+    }
+
+    @Test
     void paginationAndFilter() throws Exception {
         for (int i = 0; i < 5; i++) {
             create("Pessoa " + (char) ('A' + i));

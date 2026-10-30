@@ -3,14 +3,20 @@ package br.familytree.person;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 @Repository
+@RequiredArgsConstructor
 public class PersonRepository {
 
     private static final String COLUMNS = "id, full_name, gender, photo_key, notes, created_at, updated_at";
@@ -20,10 +26,6 @@ public class PersonRepository {
     private static final RowMapper<PersonResponse> MAPPER = PersonRepository::map;
 
     private final JdbcClient jdbc;
-
-    public PersonRepository(JdbcClient jdbc) {
-        this.jdbc = jdbc;
-    }
 
     private static PersonResponse map(ResultSet rs, int row) throws SQLException {
         String gender = rs.getString("gender");
@@ -71,6 +73,11 @@ public class PersonRepository {
                 .param("id", id).query(MAPPER).optional();
     }
 
+    public boolean setPhotoKey(UUID id, String photoKey) {
+        return jdbc.sql("UPDATE person SET photo_key = :key, updated_at = now() WHERE id = :id")
+                .param("id", id).param("key", photoKey).update() > 0;
+    }
+
     public boolean delete(UUID id) {
         return jdbc.sql("DELETE FROM person WHERE id = :id").param("id", id).update() > 0;
     }
@@ -96,6 +103,23 @@ public class PersonRepository {
                 .param("like", "%" + escapeLike(normalizedQuery) + "%")
                 .param("limit", limit).param("offset", offset)
                 .query(MAPPER).list();
+    }
+
+    /** Nomes dos pais (qualquer tipo de vinculo) de cada pessoa, em uma unica consulta. */
+    public Map<UUID, List<String>> parentNames(Collection<UUID> childIds) {
+        Map<UUID, List<String>> out = new HashMap<>();
+        if (childIds.isEmpty()) {
+            return out;
+        }
+        jdbc.sql("SELECT r.to_person_id AS child, p.full_name AS name FROM relationship r"
+                        + " JOIN person p ON p.id = r.from_person_id"
+                        + " WHERE r.type = 'PARENT_OF' AND r.to_person_id IN (:ids)"
+                        + " ORDER BY r.kind = 'BIOLOGICAL' DESC, p.search_name, p.id")
+                .param("ids", childIds)
+                .query((rs, row) -> Map.entry(rs.getObject("child", UUID.class), rs.getString("name")))
+                .list()
+                .forEach(e -> out.computeIfAbsent(e.getKey(), k -> new ArrayList<>()).add(e.getValue()));
+        return out;
     }
 
     public long countSearch(String normalizedQuery) {

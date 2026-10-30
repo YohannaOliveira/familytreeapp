@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,13 +24,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/people")
 @Validated
+@RequiredArgsConstructor
 public class PersonController {
 
     private final PersonService service;
-
-    public PersonController(PersonService service) {
-        this.service = service;
-    }
 
     @PostMapping
     public ResponseEntity<PersonResponse> create(@Valid @RequestBody PersonRequest req) {
@@ -47,7 +45,7 @@ public class PersonController {
     }
 
     @GetMapping("/search")
-    public List<PersonResponse> search(
+    public List<PersonSearchResult> search(
             @RequestParam @NotBlank(message = "q e obrigatorio") String q,
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "deve ser >= 1")
                     @Max(value = 50, message = "deve ser <= 50") int limit) {

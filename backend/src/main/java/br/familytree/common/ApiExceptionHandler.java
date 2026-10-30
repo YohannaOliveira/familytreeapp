@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -31,12 +33,26 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(ConflictException.class)
     ResponseEntity<Object> conflict(ConflictException ex) {
-        return build(HttpStatus.CONFLICT, "CONFLICT", ex.getMessage(), null);
+        return build(HttpStatus.CONFLICT, ex.code(), ex.getMessage(), null);
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    ResponseEntity<Object> badRequest(BadRequestException ex) {
+        return build(HttpStatus.BAD_REQUEST, ex.code(), ex.getMessage(), null);
+    }
+
+    @ExceptionHandler(ServiceUnavailableException.class)
+    ResponseEntity<Object> unavailable(ServiceUnavailableException ex) {
+        return build(HttpStatus.SERVICE_UNAVAILABLE, ex.code(), ex.getMessage(), null);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     ResponseEntity<Object> integrity(DataIntegrityViolationException ex) {
         log.warn("Violacao de integridade", ex);
+        String detail = String.valueOf(ex.getMostSpecificCause().getMessage());
+        if (detail.contains("uq_relationship")) {
+            return build(HttpStatus.CONFLICT, "DUPLICATE_RELATIONSHIP", "Relacionamento ja existe", null);
+        }
         return build(HttpStatus.CONFLICT, "CONFLICT", "Operacao viola uma restricao de integridade", null);
     }
 
@@ -55,6 +71,16 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     ResponseEntity<Object> typeMismatch(MethodArgumentTypeMismatchException ex) {
         return build(HttpStatus.BAD_REQUEST, "VALIDATION_ERROR", "Parametro invalido: " + ex.getName(),
                 List.of(new ErrorResponse.FieldError(ex.getName(), "valor invalido")));
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    ResponseEntity<Object> unauthenticated(AuthenticationException ex) {
+        return build(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", "Usuario ou senha invalidos", null);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    ResponseEntity<Object> forbidden(AccessDeniedException ex) {
+        return build(HttpStatus.FORBIDDEN, "FORBIDDEN", "Acesso negado", null);
     }
 
     @ExceptionHandler(Exception.class)

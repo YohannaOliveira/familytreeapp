@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test'
 
 // O e2e fala com um backend real (proxy do Vite: BACKEND_URL, padrao :8080) e um banco descartavel.
 // Credenciais do admin de teste: E2E_USER / E2E_PASSWORD.
+// O backend precisa ter CORS_ALLOWED_ORIGINS=http://localhost:<E2E_FRONT_PORT> (o proxy repassa o Origin).
 const PORT = Number(process.env.E2E_FRONT_PORT ?? 5174)
 
 export default defineConfig({

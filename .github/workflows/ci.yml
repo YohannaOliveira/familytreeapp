@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with: { node-version: 22, cache: npm, cache-dependency-path: frontend/package-lock.json }
       - run: npm ci
         working-directory: frontend
@@ -58,7 +58,7 @@ jobs:
           nohup java -jar backend/target/*-SNAPSHOT.jar > backend.log 2>&1 &
           for i in $(seq 1 60); do curl -fs localhost:8080/actuator/health && exit 0; sleep 2; done
           cat backend.log; exit 1
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with: { node-version: 22, cache: npm, cache-dependency-path: frontend/package-lock.json }
       - run: npm ci
         working-directory: frontend

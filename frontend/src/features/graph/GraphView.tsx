@@ -229,7 +229,8 @@ function GraphCanvas({ selectedId, onSelect, onExpand, onVisibleCount }: Props) 
       >
         <Background />
         <Controls showInteractive={false} />
-        <MiniMap pannable zoomable nodeColor={(n) => (n.type === 'family' ? '#94a3b8' : '#10b981')} />
+        {/* No celular o minimapa cobre boa parte do canvas; pan por toque e "ajustar" bastam. */}
+        <MiniMap className="hidden! sm:block!" pannable zoomable nodeColor={(n) => (n.type === 'family' ? '#94a3b8' : '#10b981')} />
       </ReactFlow>
       {layingOut && (
         <p

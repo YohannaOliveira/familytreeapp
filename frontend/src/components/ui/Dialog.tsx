@@ -24,12 +24,21 @@ function Overlay({
   const onCloseRef = useRef(onClose)
   onCloseRef.current = onClose
 
+  // Quem tinha o foco ao abrir: lido na renderizacao, antes de um autoFocus de dentro roubar o foco no commit.
+  const openerRef = useRef<HTMLElement | null>(null)
+  const wasOpen = useRef(false)
+  if (open && !wasOpen.current) openerRef.current = document.activeElement as HTMLElement | null
+  wasOpen.current = open
+
   useEffect(() => {
     if (!open) return
-    const previous = document.activeElement as HTMLElement | null
+    const previous = openerRef.current
     const panel = panelRef.current
-    const first = panel?.querySelector<HTMLElement>(FOCUSABLE)
-    ;(first ?? panel)?.focus()
+    // Respeita um autoFocus de dentro (ex.: primeiro campo do formulario); senao foca o primeiro controle.
+    if (panel && !panel.contains(document.activeElement)) {
+      const first = panel.querySelector<HTMLElement>(FOCUSABLE)
+      ;(first ?? panel).focus()
+    }
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {

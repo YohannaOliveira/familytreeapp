@@ -164,6 +164,101 @@ class RelationshipApiTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void duplicateParentRelationshipRejected() throws Exception {
+        UUID p = person("Pai"), kid = person("Filho");
+        parent(p, kid, "FATHER", "BIOLOGICAL");
+        conflict(rel("PARENT_OF", p, kid, "FATHER", "BIOLOGICAL"), "DUPLICATE_RELATIONSHIP");
+        // mesmo par com outro tipo de vinculo tambem e duplicata
+        conflict(rel("PARENT_OF", p, kid, "PARENT", "ADOPTIVE"), "DUPLICATE_RELATIONSHIP");
+    }
+
+    @Test
+    void directCycleAndSecondBiologicalMotherRejected() throws Exception {
+        UUID a = person("A"), b = person("B"), m1 = person("Mae1"), m2 = person("Mae2"), kid = person("K");
+        parent(a, b, "PARENT", "BIOLOGICAL");
+        conflict(rel("PARENT_OF", b, a, "PARENT", "BIOLOGICAL"), "CYCLE_DETECTED");
+        parent(m1, kid, "MOTHER", "BIOLOGICAL");
+        conflict(rel("PARENT_OF", m2, kid, "MOTHER", "BIOLOGICAL"), "DUPLICATE_PARENT_ROLE");
+        // um "PARENT" generico nao entra na regra de papel, mas ainda conta no limite de 2
+        parent(m2, kid, "PARENT", "BIOLOGICAL");
+    }
+
+    @Test
+    void nonBiologicalParentsHaveNoLimit() throws Exception {
+        UUID kid = person("Filho");
+        for (int i = 0; i < 4; i++) {
+            parent(person("Adotivo" + i), kid, "FATHER", "ADOPTIVE");
+            parent(person("Padrasto" + i), kid, "MOTHER", "STEP");
+        }
+        mvc.perform(get("/api/v1/people/" + kid + "/relationships")).andExpect(jsonPath("$", hasSize(8)));
+    }
+
+    @Test
+    void removingBiologicalParentFreesTheSlot() throws Exception {
+        UUID a = person("A"), b = person("B"), c = person("C"), kid = person("K");
+        parent(a, kid, "PARENT", "BIOLOGICAL");
+        String body = rel("PARENT_OF", b, kid, "PARENT", "BIOLOGICAL").andReturn().getResponse().getContentAsString();
+        conflict(rel("PARENT_OF", c, kid, "PARENT", "BIOLOGICAL"), "TOO_MANY_BIOLOGICAL_PARENTS");
+        mvc.perform(delete("/api/v1/relationships/" + JsonPath.<String>read(body, "$.id")))
+                .andExpect(status().isNoContent());
+        parent(c, kid, "PARENT", "BIOLOGICAL");
+    }
+
+    @Test
+    void unknownSubtypeOrKindRejected() throws Exception {
+        UUID a = person("A"), b = person("B");
+        for (String[] bad : new String[][] {{"UNCLE", "BIOLOGICAL"}, {"FATHER", "ADOPTED"}}) {
+            rel("PARENT_OF", a, b, bad[0], bad[1]).andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.code", is("INVALID_RELATIONSHIP")));
+        }
+        rel("PARTNER", a, b, "ROOMMATES", null).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code", is("INVALID_RELATIONSHIP")));
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM relationship", Integer.class)).isZero();
+    }
+
+    /** O lock da arvore serializa criacoes: em disputa, o limite de 2 pais biologicos nao pode ser furado. */
+    @Test
+    void concurrentBiologicalParentsNeverExceedTwo() throws Exception {
+        UUID kid = person("Filho");
+        int n = 8;
+        UUID[] parents = new UUID[n];
+        for (int i = 0; i < n; i++) {
+            parents[i] = person("Candidato" + i);
+        }
+        var pool = java.util.concurrent.Executors.newFixedThreadPool(n);
+        var start = new java.util.concurrent.CountDownLatch(1);
+        try {
+            var futures = new java.util.ArrayList<java.util.concurrent.Future<Integer>>();
+            for (UUID p : parents) {
+                futures.add(pool.submit(() -> {
+                    start.await();
+                    String body = "{\"type\":\"PARENT_OF\",\"fromId\":\"" + p + "\",\"toId\":\"" + kid
+                            + "\",\"subtype\":\"PARENT\",\"kind\":\"BIOLOGICAL\"}";
+                    return mvc.perform(post("/api/v1/relationships")
+                                    .with(org.springframework.security.test.web.servlet.request
+                                            .SecurityMockMvcRequestPostProcessors.user("admin").roles("ADMIN"))
+                                    .contentType(MediaType.APPLICATION_JSON).content(body))
+                            .andReturn().getResponse().getStatus();
+                }));
+            }
+            start.countDown();
+            int created = 0;
+            for (var f : futures) {
+                int status = f.get(30, java.util.concurrent.TimeUnit.SECONDS);
+                assertThat(status).isIn(201, 409);
+                if (status == 201) {
+                    created++;
+                }
+            }
+            assertThat(created).isEqualTo(2);
+        } finally {
+            pool.shutdownNow();
+        }
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM relationship WHERE to_person_id = ?", Integer.class, kid))
+                .isEqualTo(2);
+    }
+
+    @Test
     void deleteRelationship() throws Exception {
         UUID a = person("A"), b = person("B");
         String body = rel("PARTNER", a, b, "MARRIED", null).andReturn().getResponse().getContentAsString();

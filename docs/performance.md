@@ -67,15 +67,31 @@ Medido fora do navegador (`frontend/scripts/layout-bench.ts`, ELK na thread prin
 
 Causa: a camada ja vem das particoes (geracoes), mas o ELK ainda rodava network simplex para criar camadas. `elk.layered.layering.strategy = LONGEST_PATH` corta 7x sem mudar o resultado. Reduzir `thoroughness`/cruzamentos ganhava mais, porem degrada a qualidade do desenho; nao aplicado.
 
+## Navegador (Chrome, 500 pessoas)
+
+Medido em 2026-10-29 com Claude in Chrome: foco = primeiro fundador (`ORDER BY ctid`), grafo 10/10 (500 pessoas, truncado; minimapa com 655 itens contando nos de uniao). A tela nao tem controle de profundidade, entao o `up`/`down` foi injetado por uma edicao local temporaria em `GraphPage.tsx` (revertida). Ferramenta de automacao: pan e zoom reais duram ~200 ms, por isso os eventos foram disparados a cada frame por ~5 s.
+
+| fase | frames | FPS medio | FPS min | frames > 16,7 ms |
+|---|---:|---:|---:|---:|
+| parado (referencia) | 119 | 60,0 | 58,1 | 36,1% |
+| pan | 330 | 60,0 | 57,8 | 38,5% |
+| zoom | 298 | 59,8 | 29,9 | 37,9% |
+
+- Os ~37% acima de 16,7 ms sao jitter de vsync (a referencia parada da o mesmo). Pior frame no pan: 17,3 ms. No zoom, um unico frame de 33,4 ms (0,3% acima de 25 ms).
+- Heap JS: 43,0 MB usado / 73,0 MB total antes de mexer; 18,8 / 24,5 MB apos o pan; 29,7 / 75,9 MB apos o zoom (GC entre as medicoes, entao nao e monotonico). Segunda carga: 38,7 / 64,3 MB.
+- DOM: ~820 elementos apos o layout, 995 apos pan/zoom. `onlyRenderVisibleElements` ja esta ativo em `GraphView.tsx`, entao so 7 a 20 nos ficam montados por vez.
+- Sem erros no console.
+- **Nao medido**: tempo ate o fim do layout no navegador (fica entre 1 s, fim do fetch, e 7 s; o bench de Node deu 1,6 s). O FPS foi medido com poucos nos montados, nao com 500 no DOM.
+
 ## Metas
 
 | meta | resultado |
 |---|---|
 | `/graph` < 200 ms e < 100 KB em 10k | OK: 16 ms (p50), 25,8 KB padrao; 53,6 KB no pior caso (500 nos) |
 | busca < 50 ms no servidor | OK: 2 a 19 ms no banco; 15 ms ponta a ponta |
-| interacao fluida com ~500 nos | **Parcial**: layout caiu para 1,6 s (era 11,5 s). FPS de pan/zoom e memoria do navegador **nao foram medidos** (sem navegador nesta execucao) |
+| interacao fluida com ~500 nos | **OK**: pan/zoom a ~60 FPS, heap 19 a 43 MB, layout 1,6 s no Node. Tempo de layout no navegador nao cronometrado (1 a 7 s) |
 
 ## Pendencias / plano
 
-- Medir FPS e heap do navegador com 500 nos (Chrome DevTools Performance) e, se pan/zoom engasgar, considerar `onlyRenderVisibleElements` no React Flow. Fica para o M15.
+- Cronometrar o layout ate o desenho final no navegador (ex.: `performance.mark` ao iniciar o worker e ao aplicar posicoes). Pan/zoom nao precisaram de ajuste.
 - Limites atuais mantidos: `familytree.graph.max-nodes = 500`, profundidade <= 10.

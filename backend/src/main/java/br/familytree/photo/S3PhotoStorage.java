@@ -3,6 +3,7 @@ package br.familytree.photo;
 import br.familytree.common.ServiceUnavailableException;
 import java.net.URI;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -16,6 +17,7 @@ import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignReques
 
 /** S3 API apontando para o Cloudflare R2. Os clientes so sao criados no primeiro uso, se houver configuracao. */
 @Component
+@RequiredArgsConstructor
 public class S3PhotoStorage implements PhotoStorage {
 
     private static final Region R2_REGION = Region.of("auto");
@@ -23,10 +25,6 @@ public class S3PhotoStorage implements PhotoStorage {
     private final PhotoProperties props;
     private volatile S3Client client;
     private volatile S3Presigner presigner;
-
-    public S3PhotoStorage(PhotoProperties props) {
-        this.props = props;
-    }
 
     @Override
     public PresignedUpload presignUpload(String key, String contentType, long size) {

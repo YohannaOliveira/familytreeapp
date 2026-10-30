@@ -6,20 +6,17 @@ import br.familytree.photo.PhotoService;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class PersonService {
 
     private final PersonRepository repository;
     private final PhotoService photos;
-
-    public PersonService(PersonRepository repository, PhotoService photos) {
-        this.repository = repository;
-        this.photos = photos;
-    }
 
     public PersonResponse create(PersonRequest req) {
         return repository.insert(req, NameNormalizer.normalize(req.fullName()));

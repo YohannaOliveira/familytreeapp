@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.time.Instant;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
     public record LoginRequest(@NotBlank @Size(max = 200) String username, @NotBlank @Size(max = 200) String password) {}
@@ -34,12 +36,6 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtEncoder jwtEncoder;
     private final SecurityProperties props;
-
-    public AuthController(AuthenticationManager authenticationManager, JwtEncoder jwtEncoder, SecurityProperties props) {
-        this.authenticationManager = authenticationManager;
-        this.jwtEncoder = jwtEncoder;
-        this.props = props;
-    }
 
     @PostMapping("/login")
     public TokenResponse login(@Valid @RequestBody LoginRequest request) {

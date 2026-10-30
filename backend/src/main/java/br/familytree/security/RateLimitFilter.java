@@ -13,12 +13,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /** Limite por IP: restrito no login (forca bruta) e geral nas demais rotas. */
+@RequiredArgsConstructor
 public class RateLimitFilter extends OncePerRequestFilter {
 
     static final String LOGIN_PATH = "/auth/login";
@@ -27,11 +29,6 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final ObjectMapper mapper;
     private final Cache<String, Bucket> loginBuckets = newCache(Duration.ofHours(1));
     private final Cache<String, Bucket> apiBuckets = newCache(Duration.ofHours(1));
-
-    public RateLimitFilter(SecurityProperties props, ObjectMapper mapper) {
-        this.props = props;
-        this.mapper = mapper;
-    }
 
     private static Cache<String, Bucket> newCache(Duration idle) {
         return Caffeine.newBuilder().expireAfterAccess(idle).maximumSize(100_000).build();

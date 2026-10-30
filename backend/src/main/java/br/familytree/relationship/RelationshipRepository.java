@@ -4,11 +4,13 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 @Repository
+@RequiredArgsConstructor
 public class RelationshipRepository {
 
     private static final String COLUMNS = "id, type, from_person_id, to_person_id, subtype, kind, created_at";
@@ -23,10 +25,6 @@ public class RelationshipRepository {
             rs.getObject("created_at", OffsetDateTime.class));
 
     private final JdbcClient jdbc;
-
-    public RelationshipRepository(JdbcClient jdbc) {
-        this.jdbc = jdbc;
-    }
 
     /** Arvore da pessoa, se existir. */
     public Optional<UUID> treeOf(UUID personId) {

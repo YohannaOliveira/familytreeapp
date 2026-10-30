@@ -11,18 +11,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 /** SQL das consultas de grafo. Listas de ids vao como um unico literal uuid[] (sem N+1, sem IN gigante). */
 @Repository
+@RequiredArgsConstructor
 public class GraphRepository {
 
     private final JdbcClient jdbc;
-
-    public GraphRepository(JdbcClient jdbc) {
-        this.jdbc = jdbc;
-    }
 
     private static String arr(Collection<UUID> ids) {
         return ids.stream().map(UUID::toString).collect(Collectors.joining(",", "{", "}"));

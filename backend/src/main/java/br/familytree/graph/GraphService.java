@@ -12,23 +12,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class GraphService {
 
     public enum Direction { UP, DOWN, PARTNERS }
 
     private final GraphRepository repository;
-    private final int maxNodes;
 
-    public GraphService(GraphRepository repository, @Value("${familytree.graph.max-nodes:500}") int maxNodes) {
-        this.repository = repository;
-        this.maxNodes = maxNodes;
-    }
+    @Value("${familytree.graph.max-nodes:500}")
+    private final int maxNodes;
 
     /** 4 queries por requisicao, independente do tamanho do subgrafo. */
     public GraphResponse graph(UUID focus, int up, int down, boolean partners) {

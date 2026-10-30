@@ -10,11 +10,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 @Repository
+@RequiredArgsConstructor
 public class PersonRepository {
 
     private static final String COLUMNS = "id, full_name, gender, photo_key, notes, created_at, updated_at";
@@ -24,10 +26,6 @@ public class PersonRepository {
     private static final RowMapper<PersonResponse> MAPPER = PersonRepository::map;
 
     private final JdbcClient jdbc;
-
-    public PersonRepository(JdbcClient jdbc) {
-        this.jdbc = jdbc;
-    }
 
     private static PersonResponse map(ResultSet rs, int row) throws SQLException {
         String gender = rs.getString("gender");

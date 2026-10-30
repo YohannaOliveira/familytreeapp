@@ -7,12 +7,14 @@ import br.familytree.person.PersonResponse;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Pattern;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class PhotoService {
 
     private static final Logger log = LoggerFactory.getLogger(PhotoService.class);
@@ -26,12 +28,6 @@ public class PhotoService {
     private final PhotoStorage storage;
     private final PhotoProperties props;
     private final PersonRepository people;
-
-    public PhotoService(PhotoStorage storage, PhotoProperties props, PersonRepository people) {
-        this.storage = storage;
-        this.props = props;
-        this.people = people;
-    }
 
     public UploadUrlResponse createUploadUrl(String contentType, long size) {
         String ext = EXTENSIONS.get(contentType);

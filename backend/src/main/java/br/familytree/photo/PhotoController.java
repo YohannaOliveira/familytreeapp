@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,13 +16,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequiredArgsConstructor
 public class PhotoController {
 
     private final PhotoService service;
-
-    public PhotoController(PhotoService service) {
-        this.service = service;
-    }
 
     @PostMapping("/api/v1/photos/upload-url")
     public PhotoService.UploadUrlResponse uploadUrl(@Valid @RequestBody UploadUrlRequest req) {

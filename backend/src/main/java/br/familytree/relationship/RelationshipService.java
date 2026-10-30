@@ -6,11 +6,13 @@ import br.familytree.common.NotFoundException;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class RelationshipService {
 
     private static final Set<String> PARENT_SUBTYPES = Set.of("FATHER", "MOTHER", "PARENT");
@@ -19,10 +21,6 @@ public class RelationshipService {
     private static final int MAX_BIOLOGICAL_PARENTS = 2;
 
     private final RelationshipRepository repository;
-
-    public RelationshipService(RelationshipRepository repository) {
-        this.repository = repository;
-    }
 
     public RelationshipResponse create(RelationshipRequest req) {
         validateShape(req);
